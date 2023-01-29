@@ -2,6 +2,7 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createPostBodySchema, changePostBodySchema } from './schema';
 import type { PostEntity } from '../../utils/DB/entities/DBPosts';
+import { isUUID } from '../../utils/validators';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -50,6 +51,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity | {}> {
+      if (!isUUID(request.params.id)) {
+        reply.statusCode = 400;
+        return {};
+      }
       const post = await fastify.db.posts.findOne({
         key: 'id',
         equals: request.params.id
