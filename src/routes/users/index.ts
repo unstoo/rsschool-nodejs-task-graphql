@@ -40,8 +40,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const user = request.body;
-      return fastify.db.users.create(user);
+      return fastify.db.users.create(request.body);
     }
   );
 
@@ -57,12 +56,42 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id
       });
+
       if (!user) {
         reply.statusCode = 400;
         return {};
       }
 
       await fastify.db.users.delete(request.params.id);
+
+      const profile = await fastify.db.profiles.findOne({
+        key: 'userId',
+        equals: user.id
+      });
+
+      profile?.id && fastify.db.profiles.delete(profile.id);
+
+      const posts = await fastify.db.posts.findMany({
+        key: 'userId',
+        equals: user.id,
+      });
+
+      await Promise.all([
+        ...posts.map(post => fastify.db.posts.delete(post.id))
+      ]);
+
+      const users = await (await fastify.db.users.findMany()).filter(u => u.subscribedToUserIds.includes(user.id));
+
+      await Promise.all([
+        ...users.map(linkedUser => {
+          const subscribedToUserIds = linkedUser.subscribedToUserIds.filter(id => id !== user.id);
+          return fastify.db.users.change(linkedUser.id, {
+            ...linkedUser,
+            subscribedToUserIds,
+          })
+        })
+      ]);
+
       return user;
     }
   );
