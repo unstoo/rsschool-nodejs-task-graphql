@@ -64,7 +64,6 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
 
       await fastify.db.users.delete(request.params.id);
       return user;
-
     }
   );
 
@@ -164,7 +163,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         return {};
       }
 
-      return fastify.db.users.change(request.params.id, request.body);
+      return await fastify.db.users.change(request.params.id, request.body);
     }
   );
 };

@@ -73,7 +73,6 @@ test('users', async (t) => {
     });
 
     const { body: receivedUser3 } = await getUser(app, user3.id);
-    console.log(receivedUser3);
 
     t.ok(
       receivedUser3.subscribedToUserIds.includes(user1.id) &&
