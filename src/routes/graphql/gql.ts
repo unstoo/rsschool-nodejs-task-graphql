@@ -31,6 +31,9 @@ const memberType = new GraphQLObjectType({
 const userType = new GraphQLObjectType({
   name: 'UserType',
   fields: {
+    id: {
+      type: GraphQLString,
+    },
     firstName: {
       type: GraphQLString,
     },
@@ -40,12 +43,18 @@ const userType = new GraphQLObjectType({
     email: {
       type: GraphQLString,
     },
+    subscribedToUserIds: {
+      type: new GraphQLList(GraphQLString),
+    }
   },
 });
 
 const postType = new GraphQLObjectType({
   name: 'PostType',
   fields: {
+    id: {
+      type: GraphQLString,
+    },
     title: {
       type: GraphQLString,
     },
@@ -61,6 +70,9 @@ const postType = new GraphQLObjectType({
 const profileType = new GraphQLObjectType({
   name: 'ProfileType',
   fields: {
+    id: {
+      type: GraphQLString,
+    },
     avatar: {
       type: GraphQLString,
     },
@@ -92,17 +104,52 @@ const schema: GraphQLSchema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'Query',
     fields: {
-      user: {
-        type: GraphQLString,
+      memberType: {
+        type: memberType,
         args: {
           id: { type: GraphQLString }
         },
         async resolve(_, { id }, ctx) {
-          const result = await ctx.db.memberTypes.findOne({
+          return await ctx.db.memberTypes.findOne({
             key: 'id',
             equals: id,
           });
-          return JSON.stringify(result);
+        },
+      },
+      user: {
+        type: userType,
+        args: {
+          id: { type: GraphQLString }
+        },
+        async resolve(_, { id }, ctx) {
+          return await ctx.db.users.findOne({
+            key: 'id',
+            equals: id,
+          });
+        },
+      },
+      profile: {
+        type: profileType,
+        args: {
+          id: { type: GraphQLString }
+        },
+        async resolve(_, { id }, ctx) {
+          return await ctx.db.profiles.findOne({
+            key: 'id',
+            equals: id,
+          });
+        },
+      },
+      post: {
+        type: postType,
+        args: {
+          id: { type: GraphQLString }
+        },
+        async resolve(_, { id }, ctx) {
+          return await ctx.db.posts.findOne({
+            key: 'id',
+            equals: id,
+          });
         },
       },
       users: {
