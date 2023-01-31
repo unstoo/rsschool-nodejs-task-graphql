@@ -7,6 +7,7 @@ import {
   GraphQLInt,
   GraphQLList,
 } from 'graphql';
+import { PostEntity } from '../../utils/DB/entities/DBPosts';
 import type { UserEntity } from '../../utils/DB/entities/DBUsers';
 export declare type Maybe<T> = null | undefined | T;
 export declare type vars = Maybe<{
@@ -124,6 +125,64 @@ const schema: GraphQLSchema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'Query',
     fields: {
+      userWithSubPosts: {
+        type: new GraphQLObjectType({
+          name: 'UserWithPostsOfFollowers',
+          fields: {
+            ...userFields,
+            myFollowersPosts: {
+              type: new GraphQLList(postType)
+            },
+          }
+        }),
+        args: {
+          id: { type: GraphQLString }
+        },
+        async resolve(_, { id }, ctx) {
+          const user: UserEntity = await ctx.db.users.findOne({ key: 'id', equals: id });
+
+          // whole user db loaded into the memory T_T
+          const users: UserEntity[] = await ctx.db.users.findMany();
+          const followersIds = users?.filter(maybeFollower => maybeFollower.subscribedToUserIds.includes(id)).map(follower => follower.id);
+          const posts: PostEntity[] = await ctx.db.posts.findMany();
+          const myFollowersPosts: PostEntity[] = [];
+          posts.forEach((post) => {
+            if (followersIds.includes(post.userId)) myFollowersPosts.push(post);
+          });
+
+          return {
+            ...user,
+            myFollowersPosts,
+          };
+        }
+      },
+      usersWithSubProfiles: {
+        type: new GraphQLList(new GraphQLObjectType({
+          name: 'UserWithSubscribedToProfiles',
+          fields: {
+            ...userFields,
+            userSubscribedTo: {
+              type: new GraphQLList(profileType)
+            },
+          }
+        })),
+        async resolve(_, __, ctx) {
+          const users: UserEntity[] = await ctx.db.users.findMany() || [];
+
+          const usersToFetch = users.map(async (user) => {
+            const ids = user?.subscribedToUserIds;
+            const profilesToFetch = ids?.map(async (subId) => await ctx.db.profiles.findOne({ key: 'userId', equals: subId }));
+            const userSubscribedTo = await Promise.all(profilesToFetch);
+            return {
+              ...user,
+              userSubscribedTo
+            };
+          });
+
+          const result = await Promise.all(usersToFetch);
+          return result;
+        },
+      },
       userFull: {
         type: userFullType,
         args: {
