@@ -73,9 +73,10 @@ test('users', async (t) => {
     });
 
     const { body: receivedUser3 } = await getUser(app, user3.id);
+
     t.ok(
       receivedUser3.subscribedToUserIds.includes(user1.id) &&
-        receivedUser3.subscribedToUserIds.includes(user2.id)
+      receivedUser3.subscribedToUserIds.includes(user2.id)
     );
   });
 
@@ -159,7 +160,7 @@ test('users', async (t) => {
     const { body: receivedUser3 } = await getUser(app, user3.id);
     t.ok(
       receivedUser3.subscribedToUserIds.includes(user2.id) &&
-        !receivedUser3.subscribedToUserIds.includes(user1.id)
+      !receivedUser3.subscribedToUserIds.includes(user1.id)
     );
   });
 
@@ -176,9 +177,10 @@ test('users', async (t) => {
     'DELETE /users/:id => success; user with relations',
     async (t) => {
       const { body: user1 } = await createUser(app);
-      const { body: user2 } = await createUser(app);
       const { body: post1 } = await createPost(app, user1.id);
       const { body: profile1 } = await createProfile(app, user1.id, 'basic');
+
+      const { body: user2 } = await createUser(app);
 
       await app.inject({
         url: `/users/${user1.id}/subscribeTo`,

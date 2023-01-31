@@ -86,7 +86,7 @@ test('profiles', async (t) => {
     const { body: receivedProfile1 } = await getProfile(app, profile1.id);
     t.ok(
       receivedProfile1.city === changedCity &&
-        receivedProfile1.memberTypeId === changedMemberTypeId
+      receivedProfile1.memberTypeId === changedMemberTypeId
     );
   });
 
